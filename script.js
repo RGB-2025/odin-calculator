@@ -1,32 +1,3 @@
-let add = (a,b) => a+b;
-let subtract = (a,b) => a-b;
-let multiply = (a,b) => a*b;
-let divide = (a,b) => a/b;
-
-// "A calculator operation will consist of a number, an operator, and another number."
-let calculatorOperation = {
-    num1: 0,
-    num2: 0,
-    operation: null
-}
-
-let operations = {
-    add,
-    subtract,
-    multiply,
-    divide
-}
-
-// Runs an operation based on an operatior in operations
-function operate(operator, a=0, b=0) {
-    if (!operations.hasOwnProperty(operator)) {
-        console.error(`${operator} does not exist.`);
-        return;
-    }
-
-    return operations[operator](a,b);
-}
-
 // For reference
 
 // <div class="row">
@@ -35,6 +6,7 @@ function operate(operator, a=0, b=0) {
 // <button class="instant" data-op="mPlus">M+</button>
 // <button class="instant" data-op="mRecall">MR</button>
 // <button class="instant" data-op="mClear">MC</button>
+// // i changed the memory operations to be their own class "memory"
 // </div>
 
 // <div class="row">
@@ -85,6 +57,74 @@ let step = 0;
 
 let output = document.getElementById('out');
 
+// Operations
+let add = (a,b) => a+b;
+let subtract = (a,b) => a-b;
+let multiply = (a,b) => a*b;
+let divide = (a,b) => a/b;
+
+
+// Memory operations
+let mPlus = (num) => calculatorOperation.memory += num;
+let mMinus = (num) => calculatorOperation.memory -= num;
+let mRecall = (num) => output.textContent = num;
+let mClear = (_) => calculatorOperation.memory = 0; // we don't need num for this
+
+// Instant operations
+let switchSigns = (prevNum) => -prevNum;
+let percent = (prevNum) => prevNum * 0.01;
+let sqrt = (prevNum) => Math.sqrt(prevNum);
+
+
+// "A calculator operation will consist of a number, an operator, and another number."
+let calculatorOperation = {
+    num1: 0,
+    num2: 0,
+    operation: null,
+    memory: 0
+}
+
+let operations = {
+    add,
+    subtract,
+    multiply,
+    divide,
+}
+
+let memoryOperations = {
+    mPlus,
+    mMinus,
+    mRecall,
+    mClear,
+}
+
+let instantOperations = {
+    switchSigns,
+    percent,
+    sqrt,
+}
+
+// Runs an operation based on an operatior in operations
+function operate(operator, a=0, b=0) {
+    if (!operations.hasOwnProperty(operator)) {
+        console.error(`${operator} does not exist.`);
+        return;
+    }
+
+    return operations[operator](a,b);
+}
+
+function instantOperate(operator, num) {
+    if (!instantOperations.hasOwnProperty(operator)) {
+        console.error(`${operator} does not exist.`);
+        return;
+    }
+
+    return instantOperations[operator](num);
+}
+
+// Calculator functionality
+
 // Number input
 Array.from(document.getElementsByClassName('number')).forEach(numberBtn => {
     numberBtn.addEventListener('click', () => {
@@ -102,4 +142,24 @@ document.getElementById('decimal').addEventListener('click', () => {
     if (output.textContent.includes('.')) return;
 
     output.textContent += '.'
+})
+
+// Instant operation logic
+Array.from(document.getElementsByClassName('instant')).forEach(instantBtn => {
+    instantBtn.addEventListener('click', () => {
+        let ans = instantOperate(instantBtn.getAttribute('data-op'), Number(output.textContent));
+
+        // If in step 1, assign to num1 instead
+        if (step == 1) {
+            output.textContent = ans;
+            calculatorOperation.num1 = ans;
+            return;
+        }
+
+        output.textContent = ans;
+
+        // Assign number to num1 or num2
+        let numStep = 'num' + (step + 1); // Current number in step
+        calculatorOperation[numStep] = ans;
+    });
 })
