@@ -27,8 +27,44 @@ function operate(operator, a=0, b=0) {
     return operations[operator](a,b);
 }
 
-// Reality check
-console.log(operate('add', 4, 7));
-console.log(operate('subtract', 4, 7));
-console.log(operate('multiply', 4, 7));
-console.log(operate('divide', 8, 4));
+// For reference
+
+// <div class="row">
+// <button class="clear" data-op="c">C</button>
+// <button class="instant" data-op="mSubtract">M-</button>
+// <button class="instant" data-op="mPlus">M+</button>
+// <button class="instant" data-op="mRecall">MR</button>
+// <button class="instant" data-op="mClear">MC</button>
+// </div>
+
+// <div class="row">
+// <button class="backspace" data-op="ce">CE</button>
+// <button class="number" data-op="7">7</button>
+// <button class="number" data-op="4">4</button>
+// <button class="number" data-op="1">1</button>
+// <button class="number" data-op="0">0</button>
+// </div>
+
+// <div class="row">
+// <button class="instant" data-op="percent">%</button>
+// <button class="number" data-op="8">8</button>
+// <button class="number" data-op="5">5</button>
+// <button class="number" data-op="2">2</button>
+// <button class="decimal" data-op="dec">.</button>
+// </div>
+
+// <div class="row">
+// <button class="instant" data-op="switchSigns">&plusmn;</button>
+// <button class="number" data-op="3">3</button>
+// <button class="number" data-op="6">6</button>
+// <button class="number" data-op="9">9</button>
+// <button class="equals" data-op="equals">=</button>
+// </div>
+
+// <div class="row">
+// <button class="instant" data-op="sqrt">&radic;</button>
+// <button class="operator" data-op="divide">&divide;</button>
+// <button class="operator" data-op="multiply">&times;</button>
+// <button class="operator" data-op="minus">-</button>
+// <button class="operator" data-op="plus">+</button>
+// </div>
