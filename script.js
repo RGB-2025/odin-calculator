@@ -68,3 +68,38 @@ function operate(operator, a=0, b=0) {
 // <button class="operator" data-op="minus">-</button>
 // <button class="operator" data-op="plus">+</button>
 // </div>
+
+/*
+step 0: num1
+step 1: operation (triggered when an operation is done)
+step 2: num2
+
+note:
+- instant operations will not trigger step 1, rather will change num1 or num2 depending on the situation.
+- if a calculator operation is done twice, the operation will be calculated.
+(example: 5*3*4
+- calculate 5*3 and put to num1, then do *3.
+)
+*/
+let step = 0;
+
+let output = document.getElementById('out');
+
+// Number input
+Array.from(document.getElementsByClassName('number')).forEach(numberBtn => {
+    numberBtn.addEventListener('click', () => {
+        // Makes sure 0's wont dissapear from the screen
+        if (output.textContent === '0' && numberBtn.getAttribute('data-op') === '0') {
+            return;
+        }
+        output.textContent = (output.textContent + numberBtn.getAttribute('data-op')).replace(/^0+/, '');
+    });
+});
+
+// Decimal input
+document.getElementById('decimal').addEventListener('click', () => {
+    // If there is already decimal, exit
+    if (output.textContent.includes('.')) return;
+
+    output.textContent += '.'
+})
