@@ -128,6 +128,12 @@ function instantOperate(operator, num) {
 // Number input
 Array.from(document.getElementsByClassName('number')).forEach(numberBtn => {
     numberBtn.addEventListener('click', () => {
+        // If in step 1, we're in step 2
+        if (step == 1) {
+            step = 2;
+            output.textContent = ''; // Clear display
+        }
+
         // Makes sure 0's wont dissapear from the screen
         if (output.textContent === '0' && numberBtn.getAttribute('data-op') === '0') {
             return;
@@ -162,4 +168,34 @@ Array.from(document.getElementsByClassName('instant')).forEach(instantBtn => {
         let numStep = 'num' + (step + 1); // Current number in step
         calculatorOperation[numStep] = ans;
     });
-})
+});
+
+// Operation logic
+Array.from(document.getElementsByClassName('operator')).forEach(operationBtn => {
+    operationBtn.addEventListener('click', () => {
+        // If in step 1, we only need to change the operation
+        if (step == 1) {
+            calculatorOperation.operation = operationBtn.getAttribute('data-op');
+            return;
+        }
+
+        // If in step 2, we should calculate with the previous operation first and assign it to num1
+        if (step == 2) {
+            calculatorOperation.num2 = Number(output.textContent); // Set current number to num2
+
+            let ans = operate(calculatorOperation.operation, calculatorOperation.num1, calculatorOperation.num2);
+            calculatorOperation.num1 = ans;
+            output.textContent = ans;
+        }
+
+        step = 1; // We're now in step 1
+
+        // Setup num1
+        output.textContent = Number(output.textContent); // Update display to be a complete number (i.e. 2. becomes 2, 2.0100 becomes 2.01)
+        calculatorOperation.num1 = Number(output.textContent);
+
+        // Set operation
+        calculatorOperation.operation = operationBtn.getAttribute('data-op');
+        console.log(calculatorOperation.operation);
+    });
+});
