@@ -1,46 +1,3 @@
-// For reference
-
-// <div class="row">
-// <button class="clear" data-op="c">C</button>
-// <button class="instant" data-op="mSubtract">M-</button>
-// <button class="instant" data-op="mPlus">M+</button>
-// <button class="instant" data-op="mRecall">MR</button>
-// <button class="instant" data-op="mClear">MC</button>
-// // i changed the memory operations to be their own class "memory"
-// </div>
-
-// <div class="row">
-// <button class="backspace" data-op="ce">CE</button>
-// <button class="number" data-op="7">7</button>
-// <button class="number" data-op="4">4</button>
-// <button class="number" data-op="1">1</button>
-// <button class="number" data-op="0">0</button>
-// </div>
-
-// <div class="row">
-// <button class="instant" data-op="percent">%</button>
-// <button class="number" data-op="8">8</button>
-// <button class="number" data-op="5">5</button>
-// <button class="number" data-op="2">2</button>
-// <button class="decimal" data-op="dec">.</button>
-// </div>
-
-// <div class="row">
-// <button class="instant" data-op="switchSigns">&plusmn;</button>
-// <button class="number" data-op="3">3</button>
-// <button class="number" data-op="6">6</button>
-// <button class="number" data-op="9">9</button>
-// <button class="equals" data-op="equals">=</button>
-// </div>
-
-// <div class="row">
-// <button class="instant" data-op="sqrt">&radic;</button>
-// <button class="operator" data-op="divide">&divide;</button>
-// <button class="operator" data-op="multiply">&times;</button>
-// <button class="operator" data-op="minus">-</button>
-// <button class="operator" data-op="plus">+</button>
-// </div>
-
 /*
 step 0: num1
 step 1: operation (triggered when an operation is done)
@@ -66,10 +23,6 @@ let add = (a,b) => a+b;
 let subtract = (a,b) => a-b;
 let multiply = (a,b) => a*b;
 let divide = (a,b) => {
-    if (b==0) {
-        // Punish them
-        return 'This is what happens when you divide by 0.';
-    }
     return a/b;
 };
 
@@ -84,9 +37,13 @@ let mSubtract = (num) => {
     reset = true;
 }
 let mRecall = (_) => {
+    if (step == 0) {
+        calculatorOperation.num1 = calculatorOperation.memory;
+    } else if (step == 2 || step == 1) {
+        calculatorOperation.num2 = calculatorOperation.memory;
+        step = 2;
+    }
     output.textContent = calculatorOperation.memory;
-    reset = false;
-    step = 0; // this will be num1
 };
 let mClear = (_) => {
     calculatorOperation.memory = 0;
@@ -124,6 +81,31 @@ let instantOperations = {
     switchSigns,
     percent,
     sqrt,
+}
+
+let shortcuts = {
+    // Operations
+    add: '+',
+    subtract: '-',
+    multiply: '*',
+    divide: '/',
+
+    // Memory operations
+    mAdd: 'l',
+    mSubtract: 'j',
+    mRecall: 'k',
+    mClear: 'x',
+
+    // Instant operations
+    switchSigns: 's',
+    percent: '%',
+    sqrt: 'v',
+
+    // Ids
+    dec: '.',
+    equals: '=',
+    c: 'c',
+    backspace: 'Backspace',
 }
 
 // Runs an operation based on an operatior in operations
@@ -177,7 +159,15 @@ Array.from(document.getElementsByClassName('number')).forEach(numberBtn => {
         output.textContent = (output.textContent + numberBtn.getAttribute('data-op'))
         // remove beginning zeroes in whole numbers
         if (output.textContent % 1 == 0) output.textContent = output.textContent.replace(/^0+/, '');
+
+        output.textContent = output.textContent.slice(0, 25);
     });
+
+    document.addEventListener('keypress', (e) => {
+        if (e.key == numberBtn.getAttribute('data-op')) {
+            numberBtn.click();
+        }
+    })
 });
 
 // Decimal input
@@ -198,6 +188,8 @@ document.getElementById('decimal').addEventListener('click', () => {
     if (output.textContent.includes('.')) return;
 
     output.textContent += '.'
+
+    output.textContent = output.textContent.slice(0, 25);
 })
 
 // Instant operation logic
@@ -220,6 +212,8 @@ Array.from(document.getElementsByClassName('instant')).forEach(instantBtn => {
         // Assign number to num1 or num2
         let numStep = 'num' + (step + 1); // Current number in step
         calculatorOperation[numStep] = ans;
+
+        output.textContent = output.textContent.slice(0, 25);
     });
 });
 
@@ -253,14 +247,34 @@ Array.from(document.getElementsByClassName('operator')).forEach(operationBtn => 
 
         // Set operation
         calculatorOperation.operation = operationBtn.getAttribute('data-op');
-        console.log(calculatorOperation.operation);
+        
+        output.textContent = output.textContent.slice(0, 25);
     });
+});
+
+
+// Memory logic
+Array.from(document.getElementsByClassName('memory')).forEach(memoryBtn => {
+    memoryBtn.addEventListener('click', () => {
+        repeat = false;
+        mOperate(memoryBtn.getAttribute('data-op'), Number(output.textContent));
+    })
 });
 
 // Equals logic
 document.getElementById('equals').addEventListener('click', () => {
+    if ((step == 0 || step == 1) && !repeat) {
+        repeat = false;
+        return;
+    }; // to prevent bad stuff from happening
     if (repeat) {
         output.textContent = operate(calculatorOperation.operation, Number(output.textContent), calculatorOperation.num2); // Repeated calculations
+        return;
+    }
+    if (calculatorOperation.operation == 'divide' && calculatorOperation.num2 == 0) {
+        // Punish them
+        output.textContent = 'This is what happens\nwhen you divide by 0.';
+        window.location.replace('https://youtu.be/noY-Sd0DZqM?si=q3h-WteTE8k676ux&t=2');
         return;
     }
     if (step==2) calculatorOperation.num2 = Number(output.textContent); // Compile num2
@@ -269,10 +283,7 @@ document.getElementById('equals').addEventListener('click', () => {
     reset = true;
     repeat = true;
 
-    if (calculatorOperation.operation == 'divide' && calculatorOperation.num2 == 0) {
-        // Punish them
-        window.location.replace('https://youtu.be/noY-Sd0DZqM?si=q3h-WteTE8k676ux&t=2');
-    }
+    output.textContent = output.textContent.slice(0, 25);
 });
 
 // Clear logic
@@ -300,10 +311,11 @@ document.getElementById('backspace').addEventListener('click', () => {
     output.textContent = output.textContent.slice(0, -1);
 });
 
-// Memory logic
-Array.from(document.getElementsByClassName('memory')).forEach(memoryBtn => {
-    memoryBtn.addEventListener('click', () => {
-        repeat = false;
-        mOperate(memoryBtn.getAttribute('data-op'), Number(output.textContent));
-    })
-})
+document.addEventListener("keyup", (e) => {
+    for (let shortcut in shortcuts) {
+        if (e.key === shortcuts[shortcut]) {
+            let button = document.querySelector(`button[data-op='${shortcut}']`);
+            if (button) button.click();
+        }
+    }
+});
