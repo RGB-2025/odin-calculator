@@ -57,20 +57,40 @@ let step = 0;
 
 let reset = false; // if true, clear on next press
 
+let repeat = false; // Enables repeated calculations
+
 let output = document.getElementById('out');
 
 // Operations
 let add = (a,b) => a+b;
 let subtract = (a,b) => a-b;
 let multiply = (a,b) => a*b;
-let divide = (a,b) => a/b;
+let divide = (a,b) => {
+    if (b==0) {
+        // Punish them
+        return 'This is what happens when you divide by 0.';
+    }
+    return a/b;
+};
 
 
 // Memory operations
-let mPlus = (num) => calculatorOperation.memory += num;
-let mMinus = (num) => calculatorOperation.memory -= num;
-let mRecall = (num) => output.textContent = num;
-let mClear = (_) => calculatorOperation.memory = 0; // we don't need num for this
+let mAdd = (num) => {
+    calculatorOperation.memory += num;
+    reset = true;
+};
+let mSubtract = (num) => {
+    calculatorOperation.memory -= num;
+    reset = true;
+}
+let mRecall = (_) => {
+    output.textContent = calculatorOperation.memory;
+    reset = false;
+    step = 0; // this will be num1
+};
+let mClear = (_) => {
+    calculatorOperation.memory = 0;
+};
 
 // Instant operations
 let switchSigns = (prevNum) => -prevNum;
@@ -94,8 +114,8 @@ let operations = {
 }
 
 let memoryOperations = {
-    mPlus,
-    mMinus,
+    mAdd,
+    mSubtract,
     mRecall,
     mClear,
 }
@@ -123,6 +143,15 @@ function instantOperate(operator, num) {
     }
 
     return instantOperations[operator](num);
+}
+
+function mOperate(operator, num) {
+    if (!memoryOperations.hasOwnProperty(operator)) {
+        console.error(`${operator} does not exist.`);
+        return;
+    }
+
+    return memoryOperations[operator](num);
 }
 
 // Calculator functionality
@@ -174,6 +203,8 @@ document.getElementById('decimal').addEventListener('click', () => {
 // Instant operation logic
 Array.from(document.getElementsByClassName('instant')).forEach(instantBtn => {
     instantBtn.addEventListener('click', () => {
+        repeat = false;
+
         let ans = instantOperate(instantBtn.getAttribute('data-op'), Number(output.textContent));
 
         // If in step 1, assign to num1 instead
@@ -195,6 +226,8 @@ Array.from(document.getElementsByClassName('instant')).forEach(instantBtn => {
 // Operation logic
 Array.from(document.getElementsByClassName('operator')).forEach(operationBtn => {
     operationBtn.addEventListener('click', () => {
+        repeat = false;
+
         // If in step 1, we only need to change the operation
         if (step == 1) {
             calculatorOperation.operation = operationBtn.getAttribute('data-op');
@@ -226,10 +259,20 @@ Array.from(document.getElementsByClassName('operator')).forEach(operationBtn => 
 
 // Equals logic
 document.getElementById('equals').addEventListener('click', () => {
-    if (step==2) calculatorOperation.num2 = Number(output.textContent);
+    if (repeat) {
+        output.textContent = operate(calculatorOperation.operation, Number(output.textContent), calculatorOperation.num2); // Repeated calculations
+        return;
+    }
+    if (step==2) calculatorOperation.num2 = Number(output.textContent); // Compile num2
     output.textContent = operate(calculatorOperation.operation, calculatorOperation.num1, calculatorOperation.num2);
     step = 0;
     reset = true;
+    repeat = true;
+
+    if (calculatorOperation.operation == 'divide' && calculatorOperation.num2 == 0) {
+        // Punish them
+        window.location.replace('https://youtu.be/noY-Sd0DZqM?si=q3h-WteTE8k676ux&t=2');
+    }
 });
 
 // Clear logic
@@ -241,10 +284,13 @@ document.getElementById('clear').addEventListener('click', () => {
     operations.num1 = 0;
     operations.num2 = 0;
     operations.operation = '';
-})
+    repeat = false;
+});
 
 // CE logic
 document.getElementById('backspace').addEventListener('click', () => {
+    repeat = false
+
     if (output.textContent.length == 1) {
         if (output.textContent != 0) output.textContent = 0;
         return; // Do not delete the zero
@@ -252,4 +298,12 @@ document.getElementById('backspace').addEventListener('click', () => {
 
     // This just deletes the last character
     output.textContent = output.textContent.slice(0, -1);
+});
+
+// Memory logic
+Array.from(document.getElementsByClassName('memory')).forEach(memoryBtn => {
+    memoryBtn.addEventListener('click', () => {
+        repeat = false;
+        mOperate(memoryBtn.getAttribute('data-op'), Number(output.textContent));
+    })
 })
