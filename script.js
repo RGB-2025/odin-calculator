@@ -55,6 +55,8 @@ note:
 */
 let step = 0;
 
+let reset = false; // if true, clear on next press
+
 let output = document.getElementById('out');
 
 // Operations
@@ -80,7 +82,7 @@ let sqrt = (prevNum) => Math.sqrt(prevNum);
 let calculatorOperation = {
     num1: 0,
     num2: 0,
-    operation: null,
+    operation: '',
     memory: 0
 }
 
@@ -128,22 +130,41 @@ function instantOperate(operator, num) {
 // Number input
 Array.from(document.getElementsByClassName('number')).forEach(numberBtn => {
     numberBtn.addEventListener('click', () => {
+        if (reset) {
+            output.textContent = 0;
+            reset = false;
+        }
+
         // If in step 1, we're in step 2
         if (step == 1) {
             step = 2;
-            output.textContent = ''; // Clear display
+            output.textContent = 0; // Clear display
         }
 
         // Makes sure 0's wont dissapear from the screen
         if (output.textContent === '0' && numberBtn.getAttribute('data-op') === '0') {
             return;
         }
-        output.textContent = (output.textContent + numberBtn.getAttribute('data-op')).replace(/^0+/, '');
+        output.textContent = (output.textContent + numberBtn.getAttribute('data-op'))
+        // remove beginning zeroes in whole numbers
+        if (output.textContent % 1 == 0) output.textContent = output.textContent.replace(/^0+/, '');
     });
 });
 
 // Decimal input
 document.getElementById('decimal').addEventListener('click', () => {
+    if (reset) {
+        output.textContent = 0;
+        reset = false;
+    }
+
+    // if in step 1, . means decimal in step 2
+    if (step == 1) {
+        step = 2;
+        output.textContent = '0.';
+        return;
+    }
+
     // If there is already decimal, exit
     if (output.textContent.includes('.')) return;
 
@@ -156,7 +177,8 @@ Array.from(document.getElementsByClassName('instant')).forEach(instantBtn => {
         let ans = instantOperate(instantBtn.getAttribute('data-op'), Number(output.textContent));
 
         // If in step 1, assign to num1 instead
-        if (step == 1) {
+        // Operations will take in the answer
+        if (step == 1 || reset) {
             output.textContent = ans;
             calculatorOperation.num1 = ans;
             return;
@@ -188,6 +210,8 @@ Array.from(document.getElementsByClassName('operator')).forEach(operationBtn => 
             output.textContent = ans;
         }
 
+        reset = false; // Operations will take in the answer
+
         step = 1; // We're now in step 1
 
         // Setup num1
@@ -199,3 +223,33 @@ Array.from(document.getElementsByClassName('operator')).forEach(operationBtn => 
         console.log(calculatorOperation.operation);
     });
 });
+
+// Equals logic
+document.getElementById('equals').addEventListener('click', () => {
+    if (step==2) calculatorOperation.num2 = Number(output.textContent);
+    output.textContent = operate(calculatorOperation.operation, calculatorOperation.num1, calculatorOperation.num2);
+    step = 0;
+    reset = true;
+});
+
+// Clear logic
+document.getElementById('clear').addEventListener('click', () => {
+    // This resets everything except memory
+    output.textContent = 0;
+    reset = false;
+    step = 0;
+    operations.num1 = 0;
+    operations.num2 = 0;
+    operations.operation = '';
+})
+
+// CE logic
+document.getElementById('backspace').addEventListener('click', () => {
+    if (output.textContent.length == 1) {
+        if (output.textContent != 0) output.textContent = 0;
+        return; // Do not delete the zero
+    }
+
+    // This just deletes the last character
+    output.textContent = output.textContent.slice(0, -1);
+})

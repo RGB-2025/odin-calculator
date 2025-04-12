@@ -18,7 +18,8 @@ body {
     flex-direction: column;
     gap: 1.5rem;
 
-    background-color: #211825;
+    background: #211825;
+    background: linear-gradient(#211825, #17111b);
     color: white;
 }
 
@@ -29,7 +30,7 @@ header, footer {
 }
 
 footer {
-    background-color: linear-gradient(transparent, #17111b);
+
     display: flex;
 }
 
